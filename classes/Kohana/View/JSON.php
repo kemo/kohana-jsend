@@ -27,7 +27,7 @@ class Kohana_View_JSON {
 	/**
 	 * @var	array	Error messages
 	 */
-	public static $_error_messages = array(
+	protected static $_error_messages = array(
 		JSON_ERROR_DEPTH			=> 'Maximum stack depth exceeded',
 		JSON_ERROR_STATE_MISMATCH	=> 'Underflow or the modes mismatch',
 		JSON_ERROR_CTRL_CHAR		=> 'Unexpected control character found',
