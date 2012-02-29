@@ -13,7 +13,7 @@ class Kohana_View_JSON {
 	const SUCCESS 	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
-	const VERSION = '1.0.2';
+	const VERSION = '1.0.3';
 	
 	/**
 	 * @var	array	Valid status types
@@ -236,13 +236,16 @@ class Kohana_View_JSON {
 	 * Renders the current object into JSend format
 	 * 
 	 * @param	int		$options	json_encode options bitmask
-	 * @return	string	JSON representation of current object
 	 * @see		http://php.net/json_encode#refsect1-function.json-encode-parameters
+	 * @return	string	JSON representation of current object
 	 */
-	public function render($options = 0)
+	public function render($options = NULL)
 	{
-		// Clean up the data array
-		$this->_data = array_filter($this->_data);
+		if ($options = NULL)
+		{
+			// Default json_encode setting is 0
+			$options = 0;
+		}
 		
 		$response = json_encode(array(
 			'code' 		=> $this->_code,
