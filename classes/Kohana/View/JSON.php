@@ -225,7 +225,10 @@ class Kohana_View_JSON {
 			return $this->_status;
 		
 		if ( ! in_array($status, View_JSON::$_status_types, TRUE))
-			throw new Kohana_Exception('Status must be valid!');
+		{
+			throw new Kohana_Exception('Status must be one of these: :statuses!',
+				array(':statuses' => implode(', ', View_JSON::$_status_types)));
+		}
 		
 		$this->_status = $status;
 		
@@ -235,15 +238,15 @@ class Kohana_View_JSON {
 	/**
 	 * Renders the current object into JSend format
 	 * 
-	 * @param	int		$options	json_encode options bitmask
 	 * @see		http://php.net/json_encode#refsect1-function.json-encode-parameters
+	 * @param	int		$options	json_encode options bitmask
 	 * @return	string	JSON representation of current object
 	 */
 	public function render($options = NULL)
 	{
 		if ($options = NULL)
 		{
-			// Default json_encode setting is 0
+			// Default json_encode options setting is 0
 			$options = 0;
 		}
 		
