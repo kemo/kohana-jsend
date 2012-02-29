@@ -147,15 +147,15 @@ class Kohana_View_JSON {
 	}
 	
 	/**
-	 * Data getter
+	 * Data getter (Arr::path() enabled)
 	 * 
-	 * @param	string	$key
+	 * @param	string	$path to get, e.g. 'post.name'
 	 * @param	mixed	$default value
 	 * @return	mixed	Keys' value or $default if key doesn't exist
 	 */
-	public function get($key, $default = NULL)
+	public function get($path, $default = NULL)
 	{
-		return array_key_exists($key, $this->_data) ? $this->_data[$key] : $default;
+		return Arr::path($this->_data, $path, $default);
 	}
 	
 	/**
