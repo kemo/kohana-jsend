@@ -1,6 +1,6 @@
 # Kohana JSend module
 ### Author: Kemal Delalic
 
-[!!] NOT TESTED ALPHA
+[!!] Untested
 
 See: http://labs.omniti.com/labs/jsend

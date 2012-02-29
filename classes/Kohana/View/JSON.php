@@ -8,16 +8,48 @@
 class Kohana_View_JSON {
 
 	// Status codes
-	const ERROR 	= 'error';
-	const SUCCESS 	= 'success';
+	const ERROR 	= 'error';		// Execution errors; exceptions, etc.
+	const FAIL		= 'fail';		// App errors: validation etc.
+	const SUCCESS 	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
 	const VERSION = '1.0.2';
 	
+	/**
+	 * @var	array	Valid status types
+	 */
 	protected static $_status_types = array(
 		View_JSON::ERROR,
+		View_JSON::FAIL,
 		View_JSON::SUCCESS,
 	);
+	
+	/**
+	 * @var	array	Error messages
+	 */
+	public static $_error_messages = array(
+		JSON_ERROR_DEPTH			=> 'Maximum stack depth exceeded',
+		JSON_ERROR_STATE_MISMATCH	=> 'Underflow or the modes mismatch',
+		JSON_ERROR_CTRL_CHAR		=> 'Unexpected control character found',
+		JSON_ERROR_SYNTAX			=> 'Syntax error, malformed JSON',
+		JSON_ERROR_UTF8				=> 'Malformed UTF-8 characters, possibly incorrectly encoded',
+		JSON_ERROR_NONE				=> FALSE,
+	);
+	
+	/**
+	 * String representation of JSON error messages
+	 * 
+	 * @param	int		$code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
+	 * @return	mixed	String message or boolean FALSE if there is no error
+	 * @see		http://www.php.net/manual/en/function.json-last-error.php
+	 */
+	public static function error_message($code)
+	{
+		if (isset(View_JSON::$_error_messages[$code]))
+			return View_JSON::$_error_messages[$code];
+		
+		return __('Unknown JSON error code: :code', array(':code' => $code));
+	}
 	
 	/**
 	 * Factory method
@@ -33,6 +65,11 @@ class Kohana_View_JSON {
 	 * @var	int		Status code
 	 */
 	protected $_code;
+
+	/**
+	 * @var	array	Return data
+	 */
+	protected $_data = array();
 	
 	/**
 	 * @var	int		Status message
@@ -43,11 +80,6 @@ class Kohana_View_JSON {
 	 * @var	string	Status (success, error)
 	 */
 	protected $_status = View_JSON::SUCCESS;
-
-	/**
-	 * @var	array	Return data
-	 */
-	protected $_data = array();
 	
 	/**
 	 * @param	array	initial array of data
@@ -82,7 +114,7 @@ class Kohana_View_JSON {
 	}
 	
 	/**
-	 * What happens when casted to string?
+	 * More magic: what happens when echoed or casted to string?
 	 */
 	public function __toString()
 	{
@@ -115,6 +147,42 @@ class Kohana_View_JSON {
 	}
 	
 	/**
+	 * Data getter
+	 * 
+	 * @param	string	$key
+	 * @param	mixed	$default value
+	 * @return	mixed	Keys' value or $default if key doesn't exist
+	 */
+	public function get($key, $default = NULL)
+	{
+		return array_key_exists($key, $this->_data) ? $this->_data[$key] : $default;
+	}
+	
+	/**
+	 * Sets a key => value pair or the whole data array
+	 * 
+	 * @chainable
+	 * @param	mixed	$key	string or array of key => value pairs
+	 * @param	mixed	$value	to set (in case $key is string)
+	 * @return	object	$this
+	 */
+	public function set($key, $value = NULL)
+	{
+		if (is_array($key))
+		{
+			$this->_data = $key;
+			
+			return $this;
+		}
+		
+		$this->_data[$key] = $value;
+		
+		return $this;
+	}
+	
+	/**
+	 * Response code getter / setter
+	 *
 	 * @param	int		$code
 	 * @return	mixed	$code on get / $this on set
 	 */
@@ -129,6 +197,8 @@ class Kohana_View_JSON {
 	}
 	
 	/**
+	 * Response message getter / setter
+	 * 
 	 * @param	string	$message
 	 * @param	array	$values 	to use for translation
 	 * @return	mixed	$message 	on get // $this on set
@@ -144,58 +214,8 @@ class Kohana_View_JSON {
 	}
 	
 	/**
-	 * Renders the current dataset
-	 * @param	int		$options	json_encode options bitmask
-	 * @return	string	JSON representation of current object
-	 */
-	public function render($options = 0)
-	{
-		// Clean up the data array
-		$this->_data = array_filter($this->_data);
-		
-		$response = json_encode(array(
-			'code' 		=> $this->_code,
-			'data' 		=> $this->_data,
-			'message' 	=> $this->_message,
-			'status' 	=> $this->_status,
-		), $options);
-		
-		if ($code = json_last_error() and $message = View_JSON::error_message($code))
-		{
-			$this->code(500)
-				->status(View_JSON::ERROR)
-				->message('JSON error: :error', array(':error' => $message));
-		}
-		
-		return $response;
-	}
-	
-	/**
-	 * Sets a key => value pair or an array of values
-	 * 
-	 * @chainable
-	 * @param	mixed	$key	string or array of key => value pairs
-	 * @param	mixed	$value	to set (in case $key is string)
-	 * @return	object	$this
-	 */
-	public function set($key, $value = NULL)
-	{
-		if (is_array($key))
-		{
-			foreach ($key as $name => $value)
-			{
-				$this->set($name, $value);
-			}
-			
-			return $this;
-		}
-		
-		$this->_data[$key] = $value;
-		
-		return $this;
-	}
-	
-	/**
+	 * Response status getter / setter
+	 *
 	 * @param	string	$status
 	 * @return	mixed	$status on get // $this on set
 	 */
@@ -213,36 +233,34 @@ class Kohana_View_JSON {
 	}
 	
 	/**
-	 * String representation of JSON error messages
+	 * Renders the current object into JSend format
 	 * 
-	 * @param	int		$code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
-	 * @return	mixed	String message or boolean FALSE if there is no error
-	 * @see		http://www.php.net/manual/en/function.json-last-error.php
+	 * @param	int		$options	json_encode options bitmask
+	 * @return	string	JSON representation of current object
+	 * @see		http://php.net/json_encode#refsect1-function.json-encode-parameters
 	 */
-	public static function error_message($code)
+	public function render($options = 0)
 	{
-		switch ($code)
+		// Clean up the data array
+		$this->_data = array_filter($this->_data);
+		
+		$response = json_encode(array(
+			'code' 		=> $this->_code,
+			'data' 		=> $this->_data,
+			'message' 	=> $this->_message,
+			'status' 	=> $this->_status,
+		), $options);
+		
+		$code = json_last_error();
+		
+		if ($message = View_JSON::error_message($code))
 		{
-			case JSON_ERROR_DEPTH:
-				return 'Maximum stack depth exceeded';
-			
-			case JSON_ERROR_STATE_MISMATCH:
-				return 'Underflow or the modes mismatch';
-			
-			case JSON_ERROR_CTRL_CHAR:
-				return 'Unexpected control character found';
-			
-			case JSON_ERROR_SYNTAX:
-				return 'Syntax error, malformed JSON';
-			
-			case JSON_ERROR_UTF8:
-				return 'Malformed UTF-8 characters, possibly incorrectly encoded';
-				
-			case JSON_ERROR_NONE:
-				return FALSE;
-				
-			default:
-				return __('Unknown JSON error: :code', array(':code' => $code));
+			$this->code(500)
+				->message('JSON error: :error', array(':error' => $message))
+				->status(View_JSON::ERROR);
 		}
+		
+		return $response;
 	}
+	
 }
