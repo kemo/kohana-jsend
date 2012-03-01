@@ -1,16 +1,16 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
- * Strict JSend response formatting
+ * Strict JSend (JSON) response format
  *
  * @author	Kemal Delalic <github.com/kemo>
  * @see		http://labs.omniti.com/labs/jsend
  */ 
-class Kohana_View_JSON {
+class Kohana_JSend {
 
 	// Status codes
-	const ERROR 	= 'error';		// Execution errors; exceptions, etc.
+	const ERROR		= 'error';		// Execution errors; exceptions, etc.
 	const FAIL		= 'fail';		// App errors: validation etc.
-	const SUCCESS 	= 'success';	// Default status: everything seems to be OK
+	const SUCCESS	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
 	const VERSION = '1.0.3';
@@ -19,9 +19,9 @@ class Kohana_View_JSON {
 	 * @var	array	Valid status types
 	 */
 	protected static $_status_types = array(
-		View_JSON::ERROR,
-		View_JSON::FAIL,
-		View_JSON::SUCCESS,
+		JSend::ERROR,
+		JSend::FAIL,
+		JSend::SUCCESS,
 	);
 	
 	/**
@@ -45,8 +45,8 @@ class Kohana_View_JSON {
 	 */
 	public static function error_message($code)
 	{
-		if (isset(View_JSON::$_error_messages[$code]))
-			return View_JSON::$_error_messages[$code];
+		if (isset(JSend::$_error_messages[$code]))
+			return JSend::$_error_messages[$code];
 		
 		return __('Unknown JSON error code: :code', array(':code' => $code));
 	}
@@ -58,7 +58,7 @@ class Kohana_View_JSON {
 	 */
 	public static function factory(array $data = NULL)
 	{
-		return new View_JSON($data);
+		return new JSend($data);
 	}
 	
 	/**
@@ -77,9 +77,9 @@ class Kohana_View_JSON {
 	protected $_message;
 	
 	/**
-	 * @var	string	Status (success, error)
+	 * @var	string	Status (success, fail, error)
 	 */
-	protected $_status = View_JSON::SUCCESS;
+	protected $_status = JSend::SUCCESS;
 	
 	/**
 	 * @param	array	initial array of data
@@ -100,9 +100,8 @@ class Kohana_View_JSON {
 		if (array_key_exists($key, $this->_data))
 			return $this->_data[$key];
 		
-		throw new Kohana_Exception('Nonexisting key requested: :key', array(
-			':key' => $key
-		));
+		throw new Kohana_Exception('Nonexisting key requested: :key',
+			array(':key' => $key));
 	}
 	
 	/**
@@ -151,7 +150,7 @@ class Kohana_View_JSON {
 	 * 
 	 * @param	string	$path to get, e.g. 'post.name'
 	 * @param	mixed	$default value
-	 * @return	mixed	Keys' value or $default if key doesn't exist
+	 * @return	mixed	Path value or $default (if path doesn't exist)
 	 */
 	public function get($path, $default = NULL)
 	{
@@ -224,10 +223,10 @@ class Kohana_View_JSON {
 		if ($status === NULL)
 			return $this->_status;
 		
-		if ( ! in_array($status, View_JSON::$_status_types, TRUE))
+		if ( ! in_array($status, JSend::$_status_types, TRUE))
 		{
 			throw new Kohana_Exception('Status must be one of these: :statuses!',
-				array(':statuses' => implode(', ', View_JSON::$_status_types)));
+				array(':statuses' => implode(', ', JSend::$_status_types)));
 		}
 		
 		$this->_status = $status;
@@ -259,14 +258,36 @@ class Kohana_View_JSON {
 		
 		$code = json_last_error();
 		
-		if ($message = View_JSON::error_message($code))
+		if ($message = JSend::error_message($code))
 		{
 			$this->code(500)
 				->message('JSON error: :error', array(':error' => $message))
-				->status(View_JSON::ERROR);
+				->status(JSend::ERROR);
 		}
 		
 		return $response;
+	}
+	
+	/**
+	 * Sets the required HTTP Response headers and body. Example (action):
+	 * 
+	 * 	JSend::factory()
+	 * 		->set('posts', $posts)
+	 * 		->status(JSend::SUCCESS)
+	 *		->response($this->response);
+	 * 
+	 * [!!] This is the last method you call because Response body is casted to 
+	 * 		string the moment it's set
+	 *
+	 * @param	Response	$response
+	 * @return	JSend		(chainable)
+	 */
+	public function response(Response $response)
+	{
+		$response->body($this->render())
+			->headers('content-type','application/json');
+			
+		return $this;
 	}
 	
 }
