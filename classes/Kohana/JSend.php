@@ -13,7 +13,7 @@ class Kohana_JSend {
 	const SUCCESS	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
-	const VERSION = '1.0.3';
+	const VERSION = '1.0.4';
 	
 	/**
 	 * @var	array	Valid status types
@@ -284,7 +284,7 @@ class Kohana_JSend {
 	 */
 	public function response(Response $response)
 	{
-		$response->body($this->render())
+		$response->body($this)
 			->headers('content-type','application/json');
 			
 		return $this;
