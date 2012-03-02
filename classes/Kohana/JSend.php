@@ -249,20 +249,50 @@ class Kohana_JSend {
 			$options = 0;
 		}
 		
-		$response = json_encode(array(
-			'code' 		=> $this->_code,
-			'data' 		=> $this->_data,
-			'message' 	=> $this->_message,
-			'status' 	=> $this->_status,
-		), $options);
+		$data = array(
+			'status'	=> $this->_status,
+			'data'		=> $this->_data,
+		);
+		
+		if ($this->_status === JSend::ERROR)
+		{
+			/**
+			 * Error response must contain status & message
+			 * while code & data are optional
+			 */
+			$data['message'] = $this->_message;
+			
+			// If code is set, include it in the response
+			if ($this->_code !== NULL)
+			{
+				$data['code'] = $this->_code;
+			}
+			
+			// Remove empty data since it's optional
+			if (empty($data['data']))
+			{
+				unset($data['data']);
+			}
+		}
+		else
+		{
+			// Success & fail *never* contain code & message
+			unset($data['code'], $data['message']);
+		}
+		
+		// Encode the response to JSON and check for errors
+		$response = json_encode($data, $options);
 		
 		$code = json_last_error();
 		
 		if ($message = JSend::error_message($code))
 		{
-			$this->code(500)
+			// If encoding failed, create a new JSend error object
+			return JSend::factory()
+				->status(JSend::ERROR)
 				->message('JSON error: :error', array(':error' => $message))
-				->status(JSend::ERROR);
+				->code(500)
+				->render();
 		}
 		
 		return $response;
