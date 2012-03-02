@@ -286,7 +286,7 @@ class Kohana_JSend {
 	{
 		$response->body($this->render())
 			->headers('content-type','application/json')
-			->headers('x-response-format','jsend');
+			->headers('x-response-format','jsend'); // custom header for format recognition
 			
 		return $this;
 	}
