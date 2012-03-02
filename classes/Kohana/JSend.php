@@ -235,7 +235,7 @@ class Kohana_JSend {
 	}
 	
 	/**
-	 * Renders the current object into JSend format
+	 * Renders the current object into JSend (JSON) string
 	 * 
 	 * @see		http://php.net/json_encode#refsect1-function.json-encode-parameters
 	 * @param	int		$options	json_encode options bitmask
@@ -274,18 +274,19 @@ class Kohana_JSend {
 	 * 	JSend::factory()
 	 * 		->set('posts', $posts)
 	 * 		->status(JSend::SUCCESS)
-	 *		->response($this->response);
+	 *		->render_into($this->response);
 	 * 
-	 * [!!] This is the last method you call because Response body is casted to 
-	 * 		string the moment it's set
+	 * [!!] This is the last method you call because 
+	 * 		*Response body is casted to string the moment it's set*
 	 *
 	 * @param	Response	$response
 	 * @return	JSend		(chainable)
 	 */
-	public function response(Response $response)
+	public function render_into(Response $response)
 	{
-		$response->body($this)
-			->headers('content-type','application/json');
+		$response->body($this->render())
+			->headers('content-type','application/json')
+			->headers('x-response-format','jsend');
 			
 		return $this;
 	}
