@@ -13,7 +13,7 @@ class Kohana_JSend {
 	const SUCCESS	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
-	const VERSION = '1.0.4';
+	const VERSION = '1.0.5';
 	
 	/**
 	 * @var	array	Valid status types
