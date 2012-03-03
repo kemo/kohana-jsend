@@ -190,7 +190,7 @@ class Kohana_JSend {
 		if ($code === NULL)
 			return $this->_code;
 		
-		$this->_code = $code;
+		$this->_code = (int) $code;
 		
 		return $this;
 	}
@@ -254,21 +254,19 @@ class Kohana_JSend {
 			'data'		=> $this->_data,
 		);
 		
+		/**
+		 * Error response must contain status & message
+		 * while code & data are optional
+		 */
 		if ($this->_status === JSend::ERROR)
 		{
-			/**
-			 * Error response must contain status & message
-			 * while code & data are optional
-			 */
 			$data['message'] = $this->_message;
 			
-			// If code is set, include it in the response
 			if ($this->_code !== NULL)
 			{
 				$data['code'] = $this->_code;
 			}
 			
-			// Remove empty data since it's optional
 			if (empty($data['data']))
 			{
 				unset($data['data']);
@@ -294,26 +292,25 @@ class Kohana_JSend {
 	}
 	
 	/**
-	 * Sets the required HTTP Response headers and body. Example (action):
-	 * 
+	 * Sets the required HTTP Response headers and body.
+	 * [!!] This is the last method you call because 
+	 * 		*Response body is casted to string the moment it's set*
+	 *
+	 * Example action:
+	 *
 	 * 	JSend::factory()
 	 * 		->set('posts', $posts)
 	 * 		->status(JSend::SUCCESS)
 	 *		->render_into($this->response);
-	 * 
-	 * [!!] This is the last method you call because 
-	 * 		*Response body is casted to string the moment it's set*
 	 *
 	 * @param	Response	$response
-	 * @return	JSend		(chainable)
+	 * @return	void
 	 */
 	public function render_into(Response $response)
 	{
 		$response->body($this->render())
 			->headers('content-type','application/json')
 			->headers('x-response-format','jsend'); // custom header for format recognition
-			
-		return $this;
 	}
 	
 }
