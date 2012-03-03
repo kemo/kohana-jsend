@@ -16,7 +16,7 @@ class Kohana_JSend {
 	const VERSION = '1.1.0';
 	
 	// Default callback to use for setting objects
-	const DEFAULT_CALLBACK = 'JSend::filter';
+	const DEFAULT_CALLBACK = 'JSend::encode_object';
 	
 	/**
 	 * @var	array	Valid status types
@@ -65,21 +65,22 @@ class Kohana_JSend {
 	}
 	
 	/**
-	 * Default filters for rendering objects into other formats
+	 * Default method for rendering objects into their values equivalent
+	 *
 	 * Override on app level for additional classes:
 	 *
-	 *		public static function filter($object)
+	 *		public static function encode_object($object)
 	 *		{
 	 *			if ($object instanceof SomeClass)
 	 *				return $object->some_method();
 	 *			
-	 *			return parent::filter($object);
+	 *			return parent::encode_object($object);
 	 *		}
 	 * 
 	 * @param	object	$object
-	 * @return	mixed	filtered value
+	 * @return	mixed	Value to encode (e.g. array, string, int)
 	 */
-	public static function filter($object)
+	public static function encode_object($object)
 	{
 		/**
 		 * JsonSerializable
@@ -97,6 +98,7 @@ class Kohana_JSend {
 		if ($object instanceof ORM_Validation_Exception)
 			return $object->errors('');
 		
+		// If no matches, return the whole object
 		return $object;
 	}
 	
@@ -226,7 +228,7 @@ class Kohana_JSend {
 		 * Use callback filter to render objects
 		 * If no callback is specified, JSend::DEFAULT_CALLBACK will be used
 		 */
-		if (is_object($value))
+		if (is_object($value) and $callback !== FALSE)
 		{
 			if ($callback === NULL)
 			{
