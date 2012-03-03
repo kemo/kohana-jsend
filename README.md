@@ -2,15 +2,13 @@
 ### Author: Kemal Delalic
 
 See: http://labs.omniti.com/labs/jsend
-
-[!!] Not unit-tested yet
 	
 ### Example multiple scenario action
 	
 	public function action_create()
 	{
-		$json = JSend::factory();
-		$post = new Model_Post;		
+		$json = new JSend;
+		$post = new Model_Post;
 		
 		if ($this->request->method() === Request::POST)
 		{
@@ -45,6 +43,7 @@ See: http://labs.omniti.com/labs/jsend
 			->find_all()
 			->as_array('name','text');
 		
+		// Success is the default JSend status
 		JSend::factory(array('posts' => $posts))
 			->render_into($this->response);
 	}
