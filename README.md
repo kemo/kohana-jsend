@@ -17,17 +17,21 @@ See: http://labs.omniti.com/labs/jsend
 				$post->values($this->request->post())
 					->create();
 					
-				$json->set('post', $post); // success is default anyways
+				$json->data('post', $post); // success is default anyways
 			}
 			catch (ORM_Validation_Exception $e)
 			{
+				// Errors are extracted
+				// from ORM_Validation_Exception objects
 				$json->status(JSend::FAIL)
-					->set('errors', $e); // errors are extracted automatically
+					->data('errors', $e); 
 			}
 			catch (Exception $e)
 			{
-				$json->status(JSend::ERROR)
-					->message($e); // exception message will be extracted
+				// Exception message will be extracted
+				// and status will be set to JSend::ERROR
+				// because only error responses support messages
+				$json->message($e); 
 			}
 		}
 		

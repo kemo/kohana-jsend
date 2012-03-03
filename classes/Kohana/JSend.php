@@ -13,7 +13,7 @@ class Kohana_JSend {
 	const SUCCESS	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
-	const VERSION = '1.0.5';
+	const VERSION = '1.1.0';
 	
 	// Default callback to use for setting objects
 	const DEFAULT_CALLBACK = 'JSend::filter';
@@ -91,13 +91,13 @@ class Kohana_JSend {
 		if ($object instanceof ArrayObject)
 			return $object->getArrayCopy();
 			
-		if ($object instanceof ORM)
+		if ($object instanceof ORM OR $object instanceof AutoModeler)
 			return $object->as_array();
 			
 		if ($object instanceof ORM_Validation_Exception)
 			return $object->errors('');
 		
-		return (array) $object;
+		return $object;
 	}
 	
 	/**
@@ -139,7 +139,7 @@ class Kohana_JSend {
 		if (array_key_exists($key, $this->_data))
 			return $this->_data[$key];
 		
-		throw new Kohana_Exception('Nonexisting key requested: :key',
+		throw new Kohana_Exception('Nonexisting data key requested: :key',
 			array(':key' => $key));
 	}
 	
@@ -173,6 +173,7 @@ class Kohana_JSend {
 	/**
 	 * Binds a param by reference
 	 * 
+	 * @chainable
 	 * @param	string	key
 	 * @param	mixed	var
 	 * @return	object	$this
@@ -206,11 +207,14 @@ class Kohana_JSend {
 	 * @chainable
 	 * @param	mixed	$key string or array of key => value pairs
 	 * @param	mixed	$value to set (in case $key is int or string)
-	 * @param	mixed	$callback to use for setting objects
-	 * @return	object	$this
+	 * @param	mixed	$callback to use (when setting objects)
+	 * @return	JSend	$this
 	 */
 	public function set($key, $value = NULL, $callback = NULL)
 	{
+		/**
+		 * If array passed, replace the whole data
+		 */
 		if (is_array($key))
 		{
 			$this->_data = $key;
@@ -242,6 +246,7 @@ class Kohana_JSend {
 	/**
 	 * Response code getter / setter
 	 *
+	 * @chainable
 	 * @param	int		$code
 	 * @return	mixed	$code on get / $this on set
 	 */
@@ -256,8 +261,28 @@ class Kohana_JSend {
 	}
 	
 	/**
+	 * Data getter (whole data array) / proxy to set()
+	 *
+	 * @chainable
+	 * @param	mixed	$key string or array of key => value pairs
+	 * @param	mixed	$value to set (in case $key is int or string)
+	 * @param	mixed	$callback to use for setting objects
+	 * @return	mixed	$this on set, complete data array if $key is NULL
+	 */
+	public function data($key = NULL, $value = NULL, $callback = NULL)
+	{
+		// If key is empty, use as getter
+		if ($key === NULL)
+			return $this->_data;
+			
+		return $this->set($key, $value, $callback);
+	}
+	
+	/**
 	 * Response message getter / setter
+	 * [!!] This will set status to JSend::ERROR
 	 * 
+	 * @chainable
 	 * @param	mixed	$message string or Exception object
 	 * @param	array	$values 	to use for translation
 	 * @return	mixed	$message 	on get // $this on set
@@ -267,12 +292,29 @@ class Kohana_JSend {
 		if ($message === NULL)
 			return $this->_message;
 		
-		if (is_object($message) and $message instanceof Exception)
+		if ($message instanceof Exception)
 		{
-			$message = $message->getMessage();
+			// If the code hasn't been set, use Exception code
+			if ($this->_code === NULL and $code = $message->getCode())
+			{
+				$this->code($code);
+			}
+			
+			$this->_message = __(':class: :message', array(
+				':class' 	=> get_class($message),
+				':message' 	=> $message->getMessage(),
+			));
+		}
+		else
+		{
+			$this->_message = __($message, $values);
 		}
 		
-		$this->_message = __($message, $values);
+		/**
+		 * Set the status to error 
+		 * (response message is used *only* for error responses)
+		 */
+		$this->_status = JSend::ERROR;
 		
 		return $this;
 	}
@@ -280,6 +322,7 @@ class Kohana_JSend {
 	/**
 	 * Response status getter / setter
 	 *
+	 * @chainable
 	 * @param	string	$status
 	 * @return	mixed	$status on get // $this on set
 	 */
@@ -290,7 +333,7 @@ class Kohana_JSend {
 		
 		if ( ! in_array($status, JSend::$_status_types, TRUE))
 		{
-			throw new Kohana_Exception('Status must be one of these: :statuses!',
+			throw new Kohana_Exception('Status must be one of these: :statuses',
 				array(':statuses' => implode(', ', JSend::$_status_types)));
 		}
 		
@@ -345,7 +388,6 @@ class Kohana_JSend {
 		{
 			// If encoding failed, create a new JSend error object
 			return JSend::factory()
-				->status(JSend::ERROR)
 				->message('JSON error: :error', array(':error' => $message))
 				->code(500)
 				->render();
@@ -356,13 +398,14 @@ class Kohana_JSend {
 	
 	/**
 	 * Sets the required HTTP Response headers and body.
+	 *
 	 * [!!] This is the last method you call because 
 	 * 		*Response body is casted to string the moment it's set*
 	 *
 	 * Example action:
 	 *
 	 * 	JSend::factory()
-	 * 		->set('posts', $posts)
+	 * 		->data('posts', $posts)
 	 * 		->status(JSend::SUCCESS)
 	 *		->render_into($this->response);
 	 *
@@ -374,7 +417,7 @@ class Kohana_JSend {
 	{
 		$response->body($this->render($encode_options))
 			->headers('content-type','application/json')
-			->headers('x-response-format','jsend'); // custom header for format recognition
+			->headers('x-response-format','jsend'); 
 	}
 	
 }
