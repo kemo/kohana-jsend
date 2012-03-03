@@ -274,11 +274,6 @@ class Kohana_JSend {
 				unset($data['data']);
 			}
 		}
-		else
-		{
-			// Success & fail *never* contain code & message
-			unset($data['code'], $data['message']);
-		}
 		
 		// Encode the response to JSON and check for errors
 		$response = json_encode($data, $options);
