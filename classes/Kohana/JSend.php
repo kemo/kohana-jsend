@@ -93,6 +93,9 @@ class Kohana_JSend {
 			
 		if ($object instanceof ORM)
 			return $object->as_array();
+			
+		if ($object instanceof ORM_Validation_Exception)
+			return $object->errors('');
 		
 		return (array) $object;
 	}
@@ -255,7 +258,7 @@ class Kohana_JSend {
 	/**
 	 * Response message getter / setter
 	 * 
-	 * @param	string	$message
+	 * @param	mixed	$message string or Exception object
 	 * @param	array	$values 	to use for translation
 	 * @return	mixed	$message 	on get // $this on set
 	 */
@@ -263,6 +266,11 @@ class Kohana_JSend {
 	{
 		if ($message === NULL)
 			return $this->_message;
+		
+		if (is_object($message) and $message instanceof Exception)
+		{
+			$message = $message->getMessage();
+		}
 		
 		$this->_message = __($message, $values);
 		

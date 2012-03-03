@@ -18,17 +18,17 @@ See: http://labs.omniti.com/labs/jsend
 					->create();
 					
 				$json->status(JSend::SUCCESS)
-					->set('post', $post->as_array());
+					->set('post', $post);
 			}
 			catch (ORM_Validation_Exception $e)
 			{
 				$json->status(JSend::FAIL)
-					->set('errors', $e->errors(''));
+					->set('errors', $e);
 			}
 			catch (Exception $e)
 			{
 				$json->status(JSend::ERROR)
-					->message($e->getMessage());
+					->message($e);
 			}
 		}
 		
