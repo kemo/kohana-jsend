@@ -25,8 +25,7 @@ See: http://labs.omniti.com/labs/jsend
 			catch (ORM_Validation_Exception $e)
 			{
 				$json->status(JSend::FAIL)
-					->set('errors', $e->errors(''))
-					->message('Validation error');
+					->set('errors', $e->errors(''));
 			}
 			catch (Exception $e)
 			{
