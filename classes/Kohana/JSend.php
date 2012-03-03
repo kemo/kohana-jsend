@@ -15,6 +15,9 @@ class Kohana_JSend {
 	// Release version
 	const VERSION = '1.0.5';
 	
+	// Default callback to use for setting objects
+	const DEFAULT_CALLBACK = 'JSend::filter';
+	
 	/**
 	 * @var	array	Valid status types
 	 */
@@ -59,6 +62,39 @@ class Kohana_JSend {
 	public static function factory(array $data = NULL)
 	{
 		return new JSend($data);
+	}
+	
+	/**
+	 * Default filters for rendering objects into other formats
+	 * Override on app level for additional classes:
+	 *
+	 *		public static function filter($object)
+	 *		{
+	 *			if ($object instanceof SomeClass)
+	 *				return $object->some_method();
+	 *			
+	 *			return parent::filter($object);
+	 *		}
+	 * 
+	 * @param	object	$object
+	 * @return	mixed	filtered value
+	 */
+	public static function filter($object)
+	{
+		/**
+		 * JsonSerializable
+		 * @see http://php.net/JsonSerializable
+		 */
+		if ($object instanceof JsonSerializable)
+			return $object->jsonSerialize();
+		
+		if ($object instanceof ArrayObject)
+			return $object->getArrayCopy();
+			
+		if ($object instanceof ORM)
+			return $object->as_array();
+		
+		return (array) $object;
 	}
 	
 	/**
@@ -160,12 +196,17 @@ class Kohana_JSend {
 	/**
 	 * Sets a key => value pair or the whole data array
 	 * 
+	 * Example with callback (for setting objects):
+	 * 
+	 *		$jsend->set('foo', new Model_Bar, 'Foo::bar');
+	 *
 	 * @chainable
-	 * @param	mixed	$key	string or array of key => value pairs
-	 * @param	mixed	$value	to set (in case $key is string)
+	 * @param	mixed	$key string or array of key => value pairs
+	 * @param	mixed	$value to set (in case $key is int or string)
+	 * @param	mixed	$callback to use for setting objects
 	 * @return	object	$this
 	 */
-	public function set($key, $value = NULL)
+	public function set($key, $value = NULL, $callback = NULL)
 	{
 		if (is_array($key))
 		{
@@ -174,7 +215,23 @@ class Kohana_JSend {
 			return $this;
 		}
 		
-		$this->_data[$key] = $value;
+		/**
+		 * Use callback filter to render objects
+		 * If no callback is specified, JSend::DEFAULT_CALLBACK will be used
+		 */
+		if (is_object($value))
+		{
+			if ($callback === NULL)
+			{
+				$callback = JSend::DEFAULT_CALLBACK;
+			}
+			
+			$this->_data[$key] = call_user_func($callback, $value);
+		}
+		else
+		{
+			$this->_data[$key] = $value;
+		}
 		
 		return $this;
 	}
@@ -276,9 +333,7 @@ class Kohana_JSend {
 		// Encode the response to JSON and check for errors
 		$response = json_encode($data, $encode_options);
 		
-		$code = json_last_error();
-		
-		if ($message = JSend::error_message($code))
+		if ($code = json_last_error() and $message = JSend::error_message($code))
 		{
 			// If encoding failed, create a new JSend error object
 			return JSend::factory()
