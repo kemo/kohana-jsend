@@ -238,15 +238,15 @@ class Kohana_JSend {
 	 * Renders the current object into JSend (JSON) string
 	 * 
 	 * @see		http://php.net/json_encode#refsect1-function.json-encode-parameters
-	 * @param	int		$options	json_encode options bitmask
+	 * @param	int		$encode_options	json_encode() options bitmask
 	 * @return	string	JSON representation of current object
 	 */
-	public function render($options = NULL)
+	public function render($encode_options = NULL)
 	{
-		if ($options = NULL)
+		if ($encode_options = NULL)
 		{
 			// Default json_encode options setting is 0
-			$options = 0;
+			$encode_options = 0;
 		}
 		
 		$data = array(
@@ -274,7 +274,7 @@ class Kohana_JSend {
 		}
 		
 		// Encode the response to JSON and check for errors
-		$response = json_encode($data, $options);
+		$response = json_encode($data, $encode_options);
 		
 		$code = json_last_error();
 		
@@ -304,11 +304,12 @@ class Kohana_JSend {
 	 *		->render_into($this->response);
 	 *
 	 * @param	Response	$response
+	 * @param	int			$encode_options for json_encode()
 	 * @return	void
 	 */
-	public function render_into(Response $response)
+	public function render_into(Response $response, $encode_options = NULL)
 	{
-		$response->body($this->render())
+		$response->body($this->render($encode_options))
 			->headers('content-type','application/json')
 			->headers('x-response-format','jsend'); // custom header for format recognition
 	}
