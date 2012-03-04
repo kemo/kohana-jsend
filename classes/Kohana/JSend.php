@@ -7,10 +7,14 @@
  */ 
 class Kohana_JSend {
 
+	const DEFAULT_ASSOC = FALSE;    // Default $assoc is FALSE
+	const DEFAULT_DEPTH = 512;      // Default $depth is 512
+	const DEFAULT_OPTIONS = 0;      // Default $options is 0
+
 	// Status codes
-	const ERROR		= 'error';		// Execution errors; exceptions, etc.
-	const FAIL		= 'fail';		// App errors: validation etc.
-	const SUCCESS	= 'success';	// Default status: everything seems to be OK
+	const ERROR		= 'error';      // Execution errors; exceptions, etc.
+	const FAIL		= 'fail';       // App errors: validation etc.
+	const SUCCESS	= 'success';    // Default status: everything seems to be OK
 
 	// Release version
 	const VERSION = '1.2.0';
@@ -25,7 +29,50 @@ class Kohana_JSend {
 	);
 	
 	/**
-	 * Encodes a value to JSON (while throwing JSend_Exception for JSON errors)
+	 * Decodes a value to JSON 
+	 * 
+	 * This is a proxy method to json_decode() with proper exception handling
+	 *
+	 * @param	string	$json       The json string being decoded.
+	 * @param	bool	$assoc      Convert the result into associative array?
+	 * @param	int		$depth      User specified recursion depth.
+	 * @param	int		$options    Bitmask of JSON decode options.
+	 * @return	mixed	Decoded value
+	 * @throws	JSend_Exception
+	 */
+	public static function decode($json, $assoc = NULL, $depth = NULL, $options = NULL)
+	{
+		if ($assoc === NULL)
+		{
+			$assoc = JSend::DEFAULT_ASSOC;
+		}
+		
+		if ($depth === NULL)
+		{
+			$depth = JSend::DEFAULT_DEPTH;
+		}
+		
+		if ($options === NULL)
+		{
+			$options = JSend::DEFAULT_OPTIONS;
+		}
+		
+		$result = json_decode($json, $assoc, $depth, $options);
+		
+		$error = json_last_error();
+		
+		if ($error !== JSON_ERROR_NONE and $message = JSend_Exception::error_message($error))
+		{
+			throw new JSend_Exception($message, NULL, $error);
+		}
+		
+		return $result;
+	}
+	
+	/**
+	 * Encodes a value to JSON
+	 *
+	 * This is a proxy method to json_encode with proper exception handling
 	 * 
 	 * @param	mixed	$value
 	 * @param	int		$options bitmask
@@ -36,12 +83,11 @@ class Kohana_JSend {
 	{
 		if ($options === NULL)
 		{
-			// Default json_encode() $options setting is 0
-			$options = 0;
+			$options = JSend::DEFAULT_OPTIONS;
 		}
 		
-		// Encode the response to JSON and check for errors
-		$response = json_encode($value, $options);
+		// Encode the value to JSON and check for errors
+		$result = json_encode($value, $options);
 		
 		/**
 		 * Check if there were errors during encoding and throw an exception
@@ -53,7 +99,7 @@ class Kohana_JSend {
 			throw new JSend_Exception($message, NULL, $error);
 		}
 		
-		return $response;
+		return $result;
 	}
 	
 	/**
@@ -148,7 +194,7 @@ class Kohana_JSend {
 		if (array_key_exists($key, $this->_data))
 			return $this->_data[$key];
 		
-		throw new Kohana_Exception('Nonexisting data key requested: :key',
+		throw new JSend_Exception('Nonexisting data key requested: :key',
 			array(':key' => $key));
 	}
 	
@@ -173,7 +219,7 @@ class Kohana_JSend {
 		{
 			ob_start();
 			
-			Kohana_Exception::handler($e);
+			JSend_Exception::handler($e);
 
 			return (string) ob_get_clean();
 		}
@@ -354,7 +400,7 @@ class Kohana_JSend {
 		
 		if ( ! in_array($status, JSend::$_status_types, TRUE))
 		{
-			throw new Kohana_Exception('Status must be one of these: :statuses',
+			throw new JSend_Exception('Status must be one of these: :statuses',
 				array(':statuses' => implode(', ', JSend::$_status_types)));
 		}
 		

@@ -3,9 +3,9 @@
 class Kohana_JSend_Exception extends Kohana_Exception {
 	
 	/**
-	 * @var	array	Error messages
+	 * @var	array	JSON error messages
 	 */
-	protected static $_error_messages = array(
+	protected static $_json_errors = array(
 		JSON_ERROR_NONE            => FALSE,
 		JSON_ERROR_DEPTH           => 'Maximum stack depth exceeded',
 		JSON_ERROR_STATE_MISMATCH  => 'Underflow or the modes mismatch',
@@ -23,8 +23,8 @@ class Kohana_JSend_Exception extends Kohana_Exception {
 	 */
 	public static function error_message($code)
 	{
-		if (array_key_exists($code, JSend_Exception::$_error_messages))
-			return JSend_Exception::$_error_messages[$code];
+		if (array_key_exists($code, JSend_Exception::$_json_errors))
+			return JSend_Exception::$_json_errors[$code];
 		
 		return __('Unknown JSON error code: :code', array(':code' => $code));
 	}
