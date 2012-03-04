@@ -452,8 +452,7 @@ class Kohana_JSend {
 		{
 			// If encoding failed, create a new JSend error object based on exception
 			return JSend::factory()
-				->message('JSON error: :error', array(':error' => $e->getMessage()))
-				->code($e->getCode())
+				->message($e)
 				->render();
 		}
 		

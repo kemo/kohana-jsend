@@ -3,7 +3,7 @@
 class Kohana_JSend_Exception extends Kohana_Exception {
 	
 	/**
-	 * @var	array	JSON error messages
+	 * @var array    JSON error messages
 	 */
 	protected static $_json_errors = array(
 		JSON_ERROR_NONE            => FALSE,
@@ -17,9 +17,9 @@ class Kohana_JSend_Exception extends Kohana_Exception {
 	/**
 	 * Retrieves a string representation of JSON error messages
 	 * 
-	 * @param	int		$code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
-	 * @return	mixed	String message or boolean FALSE if there is no error
-	 * @see		http://www.php.net/manual/en/function.json-last-error.php
+	 * @param   int     $code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
+	 * @return  mixed   String message or boolean FALSE if there is no error
+	 * @see     http://www.php.net/manual/en/function.json-last-error.php
 	 */
 	public static function error_message($code)
 	{
