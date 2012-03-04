@@ -13,7 +13,7 @@ class Kohana_JSend {
 	const SUCCESS	= 'success';	// Default status: everything seems to be OK
 
 	// Release version
-	const VERSION = '1.1.0';
+	const VERSION = '1.2.0';
 	
 	// Default callback to use for setting objects
 	const DEFAULT_CALLBACK = 'JSend::object_values';
