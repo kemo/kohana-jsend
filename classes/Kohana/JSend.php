@@ -15,9 +15,6 @@ class Kohana_JSend {
 	// Release version
 	const VERSION = '1.2.0';
 	
-	// Default callback to use for setting objects
-	const DEFAULT_CALLBACK = 'JSend::object_values';
-	
 	/**
 	 * @var	array	Valid status types
 	 */
@@ -26,16 +23,6 @@ class Kohana_JSend {
 		JSend::FAIL,
 		JSend::SUCCESS,
 	);
-	
-	/**
-	 * Factory method
-	 *
-	 * @param	array	$data	Initial data to set
-	 */
-	public static function factory(array $data = NULL)
-	{
-		return new JSend($data);
-	}
 	
 	/**
 	 * Encodes a value to JSON (while throwing JSend_Exception for JSON errors)
@@ -47,7 +34,7 @@ class Kohana_JSend {
 	 */
 	public static function encode($value, $options = NULL)
 	{
-		if ($options = NULL)
+		if ($options === NULL)
 		{
 			// Default json_encode() $options setting is 0
 			$options = 0;
@@ -59,14 +46,24 @@ class Kohana_JSend {
 		/**
 		 * Check if there were errors during encoding and throw an exception
 		 */
-		$code = json_last_error();
+		$error = json_last_error();
 		
-		if ($message = JSend_Exception::error_message($code))
+		if ($error !== JSON_ERROR_NONE and $message = JSend_Exception::error_message($error))
 		{
-			throw new JSend_Exception($message, NULL, $code);
+			throw new JSend_Exception($message, NULL, $error);
 		}
 		
 		return $response;
+	}
+	
+	/**
+	 * Factory method
+	 *
+	 * @param	array	$data	Initial data to set
+	 */
+	public static function factory(array $data = NULL)
+	{
+		return new JSend($data);
 	}
 	
 	/**
@@ -97,11 +94,16 @@ class Kohana_JSend {
 		if ($object instanceof ArrayObject)
 			return $object->getArrayCopy();
 			
-		if ($object instanceof ORM OR $object instanceof AutoModeler)
+		if ($object instanceof ORM or $object instanceof AutoModeler)
 			return $object->as_array();
 			
 		if ($object instanceof ORM_Validation_Exception)
 			return $object->errors('');
+			
+		if ($object instanceof Database_Result)
+		{
+			// @todo	handle these
+		}
 		
 		// If no matches, return the whole object
 		return $object;
@@ -231,13 +233,14 @@ class Kohana_JSend {
 		
 		/**
 		 * Use callback filter to render objects
-		 * If no callback is specified, JSend::DEFAULT_CALLBACK will be used
+		 * - If no callback is specified, default_callback() will be used
+		 * - If 3rd parameter is set to FALSE, object will be set without callback
 		 */
 		if (is_object($value) and $callback !== FALSE)
 		{
 			if ($callback === NULL)
 			{
-				$callback = JSend::DEFAULT_CALLBACK;
+				$callback = $this->default_callback();
 			}
 			
 			$this->_data[$key] = call_user_func($callback, $value);
@@ -248,6 +251,16 @@ class Kohana_JSend {
 		}
 		
 		return $this;
+	}
+	
+	/**
+	 * Returns a callable function for extracting object data
+	 * 
+	 * @return	callable
+	 */
+	public function default_callback()
+	{
+		return 'JSend::object_values';
 	}
 	
 	/**
@@ -287,6 +300,7 @@ class Kohana_JSend {
 	
 	/**
 	 * Response message getter / setter
+	 * 
 	 * [!!] This will set status to JSend::ERROR
 	 * 
 	 * @chainable
