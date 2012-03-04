@@ -11,13 +11,11 @@ class Kohana_JSend {
 	const DEFAULT_DEPTH = 512;      // Default $depth is 512
 	const DEFAULT_OPTIONS = 0;      // Default $options is 0
 
-	// Status codes
 	const ERROR     = 'error';      // Execution errors; exceptions, etc.
 	const FAIL      = 'fail';       // App errors: validation etc.
 	const SUCCESS   = 'success';    // Default status: everything seems to be OK
 
-	// Release version
-	const VERSION   = '1.2.0';
+	const VERSION   = '1.2.0';      // Release version
 	
 	/**
 	 * @var array   Valid status types
