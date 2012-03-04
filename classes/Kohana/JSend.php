@@ -12,15 +12,15 @@ class Kohana_JSend {
 	const DEFAULT_OPTIONS = 0;      // Default $options is 0
 
 	// Status codes
-	const ERROR		= 'error';      // Execution errors; exceptions, etc.
-	const FAIL		= 'fail';       // App errors: validation etc.
-	const SUCCESS	= 'success';    // Default status: everything seems to be OK
+	const ERROR     = 'error';      // Execution errors; exceptions, etc.
+	const FAIL      = 'fail';       // App errors: validation etc.
+	const SUCCESS   = 'success';    // Default status: everything seems to be OK
 
 	// Release version
-	const VERSION = '1.2.0';
+	const VERSION   = '1.2.0';
 	
 	/**
-	 * @var	array	Valid status types
+	 * @var array   Valid status types
 	 */
 	protected static $_status_types = array(
 		JSend::ERROR,
@@ -33,12 +33,12 @@ class Kohana_JSend {
 	 * 
 	 * This is a proxy method to json_decode() with proper exception handling
 	 *
-	 * @param	string	$json       The json string being decoded.
-	 * @param	bool	$assoc      Convert the result into associative array?
-	 * @param	int		$depth      User specified recursion depth.
-	 * @param	int		$options    Bitmask of JSON decode options.
-	 * @return	mixed	Decoded value
-	 * @throws	JSend_Exception
+	 * @param   string  $json       The JSON string being decoded.
+	 * @param   bool    $assoc      Convert the result into associative array?
+	 * @param   int     $depth      User specified recursion depth.
+	 * @param   int     $options    Bitmask of JSON decode options.
+	 * @return  mixed   Decoded value
+	 * @throws  JSend_Exception
 	 */
 	public static function decode($json, $assoc = NULL, $depth = NULL, $options = NULL)
 	{
@@ -72,12 +72,12 @@ class Kohana_JSend {
 	/**
 	 * Encodes a value to JSON
 	 *
-	 * This is a proxy method to json_encode with proper exception handling
+	 * This is a proxy method to json_encode() with proper exception handling
 	 * 
-	 * @param	mixed	$value
-	 * @param	int		$options bitmask
-	 * @return	string	JSON encoded
-	 * @throws	JSend_Exception
+	 * @param   mixed   $value
+	 * @param   int     $options bitmask
+	 * @return  string  JSON encoded
+	 * @throws  JSend_Exception
 	 */
 	public static function encode($value, $options = NULL)
 	{
@@ -105,7 +105,7 @@ class Kohana_JSend {
 	/**
 	 * Factory method
 	 *
-	 * @param	array	$data	Initial data to set
+	 * @param   array    $data   Initial data to set
 	 */
 	public static function factory(array $data = NULL)
 	{
@@ -117,16 +117,16 @@ class Kohana_JSend {
 	 *
 	 * Override on app level for additional classes:
 	 *
-	 *		public static function object_values($object)
-	 *		{
-	 *			if ($object instanceof SomeClass)
-	 *				return $object->some_method();
-	 *			
-	 *			return parent::object_values($object);
-	 *		}
+	 *     public static function object_values($object)
+	 *     {
+	 *         if ($object instanceof SomeClass)
+	 *             return $object->some_method();
+	 *     
+	 *         return parent::object_values($object);
+	 *     }
 	 * 
-	 * @param	object	$object
-	 * @return	mixed	Value to encode (e.g. array, string, int)
+	 * @param   object  $object
+	 * @return  mixed   Value to encode (e.g. array, string, int)
 	 */
 	public static function object_values($object)
 	{
@@ -156,27 +156,27 @@ class Kohana_JSend {
 	}
 	
 	/**
-	 * @var	int		Status code
+	 * @var int     Status code
 	 */
 	protected $_code;
 
 	/**
-	 * @var	array	Return data
+	 * @var array   Return data
 	 */
 	protected $_data = array();
 	
 	/**
-	 * @var	int		Status message
+	 * @var int     Status message
 	 */
 	protected $_message;
 	
 	/**
-	 * @var	string	Status (success, fail, error)
+	 * @var string  Status (success, fail, error)
 	 */
 	protected $_status = JSend::SUCCESS;
 	
 	/**
-	 * @param	array	initial array of data
+	 * @param   array   initial array of data
 	 */
 	public function __construct(array $data = NULL)
 	{
@@ -229,9 +229,9 @@ class Kohana_JSend {
 	 * Binds a param by reference
 	 * 
 	 * @chainable
-	 * @param	string	key
-	 * @param	mixed	var
-	 * @return	object	$this
+	 * @param   string  $key
+	 * @param   mixed   $value to reference
+	 * @return  object  $this
 	 */
 	public function bind($key, & $value)
 	{
@@ -243,9 +243,9 @@ class Kohana_JSend {
 	/**
 	 * Data getter (Arr::path() enabled)
 	 * 
-	 * @param	string	$path to get, e.g. 'post.name'
-	 * @param	mixed	$default value
-	 * @return	mixed	Path value or $default (if path doesn't exist)
+	 * @param   string  $path to get, e.g. 'post.name'
+	 * @param   mixed   $default value
+	 * @return  mixed   Path value or $default (if path doesn't exist)
 	 */
 	public function get($path, $default = NULL)
 	{
@@ -257,13 +257,13 @@ class Kohana_JSend {
 	 * 
 	 * Example with callback (for setting objects):
 	 * 
-	 *		$jsend->set('foo', new Model_Bar, 'Foo::bar');
+	 *     $jsend->set('foo', new Model_Bar, 'Foo::bar');
 	 *
 	 * @chainable
-	 * @param	mixed	$key string or array of key => value pairs
-	 * @param	mixed	$value to set (in case $key is int or string)
-	 * @param	mixed	$callback to use (when setting objects)
-	 * @return	JSend	$this
+	 * @param   mixed   $key string or array of key => value pairs
+	 * @param   mixed   $value to set (in case $key is int or string)
+	 * @param   mixed   $callback to use (when setting objects)
+	 * @return  JSend   $this
 	 */
 	public function set($key, $value = NULL, $callback = NULL)
 	{
@@ -302,7 +302,7 @@ class Kohana_JSend {
 	/**
 	 * Returns a callable function for extracting object data
 	 * 
-	 * @return	callable
+	 * @return  callable
 	 */
 	public function default_callback()
 	{
@@ -313,8 +313,8 @@ class Kohana_JSend {
 	 * Response code getter / setter
 	 *
 	 * @chainable
-	 * @param	int		$code
-	 * @return	mixed	$code on get / $this on set
+	 * @param   int     $code
+	 * @return  mixed   $code on get / $this on set
 	 */
 	public function code($code = NULL)
 	{
@@ -330,10 +330,10 @@ class Kohana_JSend {
 	 * Data getter (whole data array) / proxy to set()
 	 *
 	 * @chainable
-	 * @param	mixed	$key string or array of key => value pairs
-	 * @param	mixed	$value to set (in case $key is int or string)
-	 * @param	mixed	$callback to use for setting objects
-	 * @return	mixed	$this on set, complete data array if $key is NULL
+	 * @param   mixed   $key string or array of key => value pairs
+	 * @param   mixed   $value to set (in case $key is int or string)
+	 * @param   mixed   $callback to use for setting objects
+	 * @return  mixed   $this on set, complete data array if $key is NULL
 	 */
 	public function data($key = NULL, $value = NULL, $callback = NULL)
 	{
@@ -350,9 +350,10 @@ class Kohana_JSend {
 	 * [!!] This will set status to JSend::ERROR
 	 * 
 	 * @chainable
-	 * @param	mixed	$message string or Exception object
-	 * @param	array	$values 	to use for translation
-	 * @return	mixed	$message 	on get // $this on set
+	 * @param   mixed   $message string or Exception object
+	 * @param   array   $values to use for translation
+	 * @return  mixed   $message on get
+	 * @return  JSend   $this on set
 	 */
 	public function message($message = NULL, array $values = NULL)
 	{
@@ -390,8 +391,9 @@ class Kohana_JSend {
 	 * Response status getter / setter
 	 *
 	 * @chainable
-	 * @param	string	$status
-	 * @return	mixed	$status on get // $this on set
+	 * @param   string  $status
+	 * @return  mixed   $status on get
+	 * @return  JSend   $this on set
 	 */
 	public function status($status = NULL)
 	{
@@ -412,15 +414,15 @@ class Kohana_JSend {
 	/**
 	 * Renders the current object into JSend (JSON) string
 	 * 
-	 * @see		http://php.net/json_encode#refsect1-function.json-encode-parameters
-	 * @param	int		$encode_options	json_encode() options bitmask
-	 * @return	string	JSON representation of current object
+	 * @param   int     $encode_options json_encode() options bitmask
+	 * @return  string  JSON representation of current object
+	 * @see     http://php.net/json_encode#refsect1-function.json-encode-parameters
 	 */
 	public function render($encode_options = NULL)
 	{
 		$data = array(
-			'status'	=> $this->_status,
-			'data'		=> $this->_data,
+			'status' => $this->_status,
+			'data'   => $this->_data,
 		);
 		
 		/**
@@ -462,18 +464,18 @@ class Kohana_JSend {
 	 * Sets the required HTTP Response headers and body.
 	 *
 	 * [!!] This is the last method you call because 
-	 * 		*Response body is casted to string the moment it's set*
+	 *     *Response body is casted to string the moment it's set*
 	 *
 	 * Example action:
 	 *
-	 * 	JSend::factory()
-	 * 		->data('posts', $posts)
-	 * 		->status(JSend::SUCCESS)
-	 *		->render_into($this->response);
+	 * JSend::factory()
+	 *     ->data('posts', $posts)
+	 *     ->status(JSend::SUCCESS)
+	 *     ->render_into($this->response);
 	 *
-	 * @param	Response	$response
-	 * @param	int			$encode_options for json_encode()
-	 * @return	void
+	 * @param   Response    $response
+	 * @param   int         $encode_options for json_encode()
+	 * @return  void
 	 */
 	public function render_into(Response $response, $encode_options = NULL)
 	{
