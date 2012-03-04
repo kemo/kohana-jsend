@@ -16,7 +16,7 @@ class Kohana_JSend {
 	const VERSION = '1.1.0';
 	
 	// Default callback to use for setting objects
-	const DEFAULT_CALLBACK = 'JSend::encode_object';
+	const DEFAULT_CALLBACK = 'JSend::object_values';
 	
 	/**
 	 * @var	array	Valid status types
@@ -26,33 +26,6 @@ class Kohana_JSend {
 		JSend::FAIL,
 		JSend::SUCCESS,
 	);
-	
-	/**
-	 * @var	array	Error messages
-	 */
-	protected static $_error_messages = array(
-		JSON_ERROR_DEPTH			=> 'Maximum stack depth exceeded',
-		JSON_ERROR_STATE_MISMATCH	=> 'Underflow or the modes mismatch',
-		JSON_ERROR_CTRL_CHAR		=> 'Unexpected control character found',
-		JSON_ERROR_SYNTAX			=> 'Syntax error, malformed JSON',
-		JSON_ERROR_UTF8				=> 'Malformed UTF-8 characters, possibly incorrectly encoded',
-		JSON_ERROR_NONE				=> FALSE,
-	);
-	
-	/**
-	 * String representation of JSON error messages
-	 * 
-	 * @param	int		$code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
-	 * @return	mixed	String message or boolean FALSE if there is no error
-	 * @see		http://www.php.net/manual/en/function.json-last-error.php
-	 */
-	public static function error_message($code)
-	{
-		if (isset(JSend::$_error_messages[$code]))
-			return JSend::$_error_messages[$code];
-		
-		return __('Unknown JSON error code: :code', array(':code' => $code));
-	}
 	
 	/**
 	 * Factory method
@@ -65,22 +38,54 @@ class Kohana_JSend {
 	}
 	
 	/**
+	 * Encodes a value to JSON (while throwing JSend_Exception for JSON errors)
+	 * 
+	 * @param	mixed	$value
+	 * @param	int		$options bitmask
+	 * @return	string	JSON encoded
+	 * @throws	JSend_Exception
+	 */
+	public static function encode($value, $options = NULL)
+	{
+		if ($options = NULL)
+		{
+			// Default json_encode() $options setting is 0
+			$options = 0;
+		}
+		
+		// Encode the response to JSON and check for errors
+		$response = json_encode($value, $options);
+		
+		/**
+		 * Check if there were errors during encoding and throw an exception
+		 */
+		$code = json_last_error();
+		
+		if ($message = JSend_Exception::error_message($code))
+		{
+			throw new JSend_Exception($message, NULL, $code);
+		}
+		
+		return $response;
+	}
+	
+	/**
 	 * Default method for rendering objects into their values equivalent
 	 *
 	 * Override on app level for additional classes:
 	 *
-	 *		public static function encode_object($object)
+	 *		public static function object_values($object)
 	 *		{
 	 *			if ($object instanceof SomeClass)
 	 *				return $object->some_method();
 	 *			
-	 *			return parent::encode_object($object);
+	 *			return parent::object_values($object);
 	 *		}
 	 * 
 	 * @param	object	$object
 	 * @return	mixed	Value to encode (e.g. array, string, int)
 	 */
-	public static function encode_object($object)
+	public static function object_values($object)
 	{
 		/**
 		 * JsonSerializable
@@ -353,12 +358,6 @@ class Kohana_JSend {
 	 */
 	public function render($encode_options = NULL)
 	{
-		if ($encode_options = NULL)
-		{
-			// Default json_encode options setting is 0
-			$encode_options = 0;
-		}
-		
 		$data = array(
 			'status'	=> $this->_status,
 			'data'		=> $this->_data,
@@ -383,15 +382,16 @@ class Kohana_JSend {
 			}
 		}
 		
-		// Encode the response to JSON and check for errors
-		$response = json_encode($data, $encode_options);
-		
-		if ($code = json_last_error() and $message = JSend::error_message($code))
+		try
 		{
-			// If encoding failed, create a new JSend error object
+			$response = JSend::encode($data, $encode_options);
+		}
+		catch (JSend_Exception $e)
+		{
+			// If encoding failed, create a new JSend error object based on exception
 			return JSend::factory()
-				->message('JSON error: :error', array(':error' => $message))
-				->code(500)
+				->message('JSON error: :error', array(':error' => $e->getMessage()))
+				->code($e->getCode())
 				->render();
 		}
 		
