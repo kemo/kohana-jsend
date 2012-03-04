@@ -15,9 +15,6 @@ class Kohana_JSend {
 	// Release version
 	const VERSION = '1.1.0';
 	
-	// Default callback to use for setting objects
-	const DEFAULT_CALLBACK = 'JSend::encode_object';
-	
 	/**
 	 * @var	array	Valid status types
 	 */
@@ -38,31 +35,6 @@ class Kohana_JSend {
 		JSON_ERROR_UTF8				=> 'Malformed UTF-8 characters, possibly incorrectly encoded',
 		JSON_ERROR_NONE				=> FALSE,
 	);
-	
-	/**
-	 * String representation of JSON error messages
-	 * 
-	 * @param	int		$code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
-	 * @return	mixed	String message or boolean FALSE if there is no error
-	 * @see		http://www.php.net/manual/en/function.json-last-error.php
-	 */
-	public static function error_message($code)
-	{
-		if (isset(JSend::$_error_messages[$code]))
-			return JSend::$_error_messages[$code];
-		
-		return __('Unknown JSON error code: :code', array(':code' => $code));
-	}
-	
-	/**
-	 * Factory method
-	 *
-	 * @param	array	$data	Initial data to set
-	 */
-	public static function factory(array $data = NULL)
-	{
-		return new JSend($data);
-	}
 	
 	/**
 	 * Default method for rendering objects into their values equivalent
@@ -92,14 +64,44 @@ class Kohana_JSend {
 		if ($object instanceof ArrayObject)
 			return $object->getArrayCopy();
 			
-		if ($object instanceof ORM OR $object instanceof AutoModeler)
+		if ($object instanceof ORM or $object instanceof AutoModeler)
 			return $object->as_array();
 			
 		if ($object instanceof ORM_Validation_Exception)
 			return $object->errors('');
+			
+		if ($object instanceof Database_Result)
+		{
+			// @todo	handle these
+		}
 		
 		// If no matches, return the whole object
 		return $object;
+	}
+	
+	/**
+	 * String representation of JSON error messages
+	 * 
+	 * @param	int		$code	Usually a predefined constant, e.g. JSON_ERROR_SYNTAX
+	 * @return	mixed	String message or boolean FALSE if there is no error
+	 * @see		http://www.php.net/manual/en/function.json-last-error.php
+	 */
+	public static function error_message($code)
+	{
+		if (isset(JSend::$_error_messages[$code]))
+			return JSend::$_error_messages[$code];
+		
+		return __('Unknown JSON error code: :code', array(':code' => $code));
+	}
+	
+	/**
+	 * Factory method
+	 *
+	 * @param	array	$data	Initial data to set
+	 */
+	public static function factory(array $data = NULL)
+	{
+		return new JSend($data);
 	}
 	
 	/**
@@ -226,13 +228,14 @@ class Kohana_JSend {
 		
 		/**
 		 * Use callback filter to render objects
-		 * If no callback is specified, JSend::DEFAULT_CALLBACK will be used
+		 * - If no callback is specified, default_callback() will be used
+		 * - If 3rd parameter is set to FALSE, object will be set without callback
 		 */
 		if (is_object($value) and $callback !== FALSE)
 		{
 			if ($callback === NULL)
 			{
-				$callback = JSend::DEFAULT_CALLBACK;
+				$callback = $this->default_callback();
 			}
 			
 			$this->_data[$key] = call_user_func($callback, $value);
@@ -243,6 +246,16 @@ class Kohana_JSend {
 		}
 		
 		return $this;
+	}
+	
+	/**
+	 * Returns a callable function for extracting object data
+	 * 
+	 * @return	callable
+	 */
+	public function default_callback()
+	{
+		return 'JSend::encode_object';
 	}
 	
 	/**
