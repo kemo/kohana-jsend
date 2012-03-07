@@ -155,6 +155,9 @@ class Kohana_JSend {
 		
 		if ($object instanceof ArrayObject)
 			return $object->getArrayCopy();
+			
+		if (method_exists($object, '__toString'))
+			return (string) $object;
 		
 		// If no matches, return the whole object
 		return $object;
