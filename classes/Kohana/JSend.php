@@ -29,15 +29,18 @@ class Kohana_JSend {
 	/**
 	 * Checks if an error occured during the last json_encode() / json_decode() operation
 	 * 
-	 * @return  void
+	 * @param   mixed   $passthrough var to return (in case exception isn't thrown)
+	 * @return  mixed   $passthrough
 	 * @throws  JSend_Exception
 	 */
-	public static function check_json_errors()
+	public static function check_json_errors($passthrough = NULL)
 	{
 		$error = json_last_error();
 		
 		if ($error !== JSON_ERROR_NONE and $message = JSend_Exception::error_message($error))
 			throw new JSend_Exception($message, NULL, $error);
+			
+		return $passthrough;
 	}
 	
 	/**
@@ -71,9 +74,7 @@ class Kohana_JSend {
 		
 		$result = json_decode($json, $assoc, $depth, $options);
 		
-		JSend::check_json_errors();
-		
-		return $result;
+		return JSend::check_json_errors($result);
 	}
 	
 	/**
@@ -96,9 +97,7 @@ class Kohana_JSend {
 		// Encode the value to JSON and check for errors
 		$result = json_encode($value, $options);
 		
-		JSend::check_json_errors();
-		
-		return $result;
+		return JSend::check_json_errors($result);
 	}
 	
 	/**
