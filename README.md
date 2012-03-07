@@ -42,12 +42,8 @@ See: http://labs.omniti.com/labs/jsend
 
 	public function action_posts()
 	{
-		$posts = ORM::factory('post')
-			->find_all()
-			->as_array('name','text');
-		
 		// Success is the default JSend status
-		JSend::factory(array('posts' => $posts))
+		JSend::factory(array('posts' => ORM::factory('post')->find_all()))
 			->render_into($this->response);
 	}
 	
