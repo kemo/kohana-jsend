@@ -134,9 +134,6 @@ class Kohana_JSend {
 		 */
 		if ($object instanceof JsonSerializable)
 			return $object->jsonSerialize();
-		
-		if ($object instanceof ArrayObject)
-			return $object->getArrayCopy();
 			
 		if ($object instanceof ORM or $object instanceof AutoModeler)
 			return $object->as_array();
@@ -146,8 +143,18 @@ class Kohana_JSend {
 			
 		if ($object instanceof Database_Result)
 		{
-			// @todo	handle these
+			$items = array();
+			
+			foreach ($object as $result)
+			{
+				$items[] = JSend::object_values($result);
+			}
+			
+			return $items;
 		}
+		
+		if ($object instanceof ArrayObject)
+			return $object->getArrayCopy();
 		
 		// If no matches, return the whole object
 		return $object;
@@ -270,7 +277,12 @@ class Kohana_JSend {
 		 */
 		if (is_array($key))
 		{
-			$this->_data = $key;
+			$this->_data = array();
+			
+			foreach ($key as $_key => $_value)
+			{
+				$this->set($_key, $_value);
+			}
 			
 			return $this;
 		}
