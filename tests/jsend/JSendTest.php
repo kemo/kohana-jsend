@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') OR die('Kohana bootstrap needs to be included before tests run');
 
 /**
- * Tests the Arr lib that's shipped with kohana
+ * Tests the JSend model functionality
  *
  * @group jsend
  *
