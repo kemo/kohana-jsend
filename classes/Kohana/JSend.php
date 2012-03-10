@@ -184,6 +184,11 @@ class Kohana_JSend {
 	protected $_status = JSend::SUCCESS;
 	
 	/**
+	 * @var array   Filters for rendering objects
+	 */
+	protected $_filters = array();
+	
+	/**
 	 * @param   array   initial array of data
 	 */
 	public function __construct(array $data = NULL)
@@ -270,10 +275,10 @@ class Kohana_JSend {
 	 * @chainable
 	 * @param   mixed   $key string or array of key => value pairs
 	 * @param   mixed   $value to set (in case $key is int or string)
-	 * @param   mixed   $callback to use (when setting objects)
+	 * @param   mixed   $filter to use (when setting objects)
 	 * @return  JSend   $this
 	 */
-	public function set($key, $value = NULL, $callback = NULL)
+	public function set($key, $value = NULL, $filter = NULL)
 	{
 		/**
 		 * If array passed, replace the whole data
@@ -290,24 +295,8 @@ class Kohana_JSend {
 			return $this;
 		}
 		
-		/**
-		 * Use callback filter to render objects
-		 * - If no callback is specified, default_callback() will be used
-		 * - If 3rd parameter is set to FALSE, object will be set without callback
-		 */
-		if (is_object($value) and $callback !== FALSE)
-		{
-			if ($callback === NULL)
-			{
-				$callback = $this->default_callback();
-			}
-			
-			$this->_data[$key] = call_user_func($callback, $value);
-		}
-		else
-		{
-			$this->_data[$key] = $value;
-		}
+		$this->_data[$key] = $value;
+		$this->_filters[$key] = $filter;
 		
 		return $this;
 	}
@@ -345,16 +334,16 @@ class Kohana_JSend {
 	 * @chainable
 	 * @param   mixed   $key string or array of key => value pairs
 	 * @param   mixed   $value to set (in case $key is int or string)
-	 * @param   mixed   $callback to use for setting objects
+	 * @param   mixed   $filter to use for setting objects
 	 * @return  mixed   $this on set, complete data array if $key is NULL
 	 */
-	public function data($key = NULL, $value = NULL, $callback = NULL)
+	public function data($key = NULL, $value = NULL, $filter = NULL)
 	{
 		// If key is empty, use as getter
 		if ($key === NULL)
 			return $this->_data;
 			
-		return $this->set($key, $value, $callback);
+		return $this->set($key, $value, $filter);
 	}
 	
 	/**
@@ -433,6 +422,26 @@ class Kohana_JSend {
 	 */
 	public function render($encode_options = NULL)
 	{
+		foreach ($this->_data as $key => $value)
+		{
+			$filter = Arr::get($this->_filters, $key);
+			
+			/**
+			 * Use filters to render objects
+			 * - If no filter is specified, default_callback() will be used
+			 * - If filter is set to FALSE, object won't be filtered at all
+			 */
+			if (is_object($value) and $filter !== FALSE)
+			{
+				if ($filter === NULL)
+				{
+					$filter = $this->default_callback();
+				}
+				
+				$this->_data[$key] = call_user_func($filter, $value);
+			}
+		}
+		
 		$data = array(
 			'status' => $this->_status,
 			'data'   => $this->_data,
