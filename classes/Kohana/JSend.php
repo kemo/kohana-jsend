@@ -422,29 +422,43 @@ class Kohana_JSend {
 	 */
 	public function render($encode_options = NULL)
 	{
+		$data = array();
+		
 		foreach ($this->_data as $key => $value)
 		{
 			$filter = Arr::get($this->_filters, $key);
 			
 			/**
-			 * Use filters to render objects
-			 * - If no filter is specified, default_callback() will be used
-			 * - If filter is set to FALSE, object won't be filtered at all
+			 * If filter is set to FALSE, object won't be filtered at all
 			 */
-			if (is_object($value) and $filter !== FALSE)
+			if ($filter !== FALSE)
 			{
-				if ($filter === NULL)
+				if (is_object($value))
 				{
-					$filter = $this->default_callback();
+					if ($filter === NULL)
+					{
+						$filter = $this->default_callback();
+					}
+					
+					$data[$key] = call_user_func($filter, $value);
 				}
-				
-				$this->_data[$key] = call_user_func($filter, $value);
+				elseif ($filter !== NULL)
+				{
+					// If a filter has been passed for other values..
+					$data[$key] = call_user_func($filter, $value);
+				}
+			}
+			
+			// If no value has been set using filters..
+			if ( ! array_key_exists($key, $data))
+			{
+				$data[$key] = $value;
 			}
 		}
 		
-		$data = array(
+		$result = array(
 			'status' => $this->_status,
-			'data'   => $this->_data,
+			'data'   => $data,
 		);
 		
 		/**
@@ -453,22 +467,22 @@ class Kohana_JSend {
 		 */
 		if ($this->_status === JSend::ERROR)
 		{
-			$data['message'] = $this->_message;
+			$result['message'] = $this->_message;
 			
 			if ($this->_code !== NULL)
 			{
-				$data['code'] = $this->_code;
+				$result['code'] = $this->_code;
 			}
 			
-			if (empty($data['data']))
+			if (empty($result['data']))
 			{
-				unset($data['data']);
+				unset($result['data']);
 			}
 		}
 		
 		try
 		{
-			$response = JSend::encode($data, $encode_options);
+			$response = JSend::encode($result, $encode_options);
 		}
 		catch (JSend_Exception $e)
 		{
