@@ -15,7 +15,7 @@ class Kohana_JSend {
 	const FAIL      = 'fail';       // App errors: validation etc.
 	const SUCCESS   = 'success';    // Default status: everything seems to be OK
 
-	const VERSION   = '1.2.0';      // Release version
+	const VERSION   = '1.3.0';      // Release version
 	
 	/**
 	 * @var array   Valid status types
