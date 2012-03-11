@@ -15,7 +15,7 @@ class Kohana_JSend {
 	const FAIL      = 'fail';       // App errors: validation etc.
 	const SUCCESS   = 'success';    // Default status: everything seems to be OK
 
-	const VERSION   = '1.2.0';      // Release version
+	const VERSION   = '1.3.0';      // Release version
 	
 	/**
 	 * @var array   Valid status types
@@ -155,6 +155,9 @@ class Kohana_JSend {
 		
 		if ($object instanceof ArrayObject)
 			return $object->getArrayCopy();
+			
+		if (method_exists($object, '__toString'))
+			return (string) $object;
 		
 		// If no matches, return the whole object
 		return $object;
@@ -179,6 +182,11 @@ class Kohana_JSend {
 	 * @var string  Status (success, fail, error)
 	 */
 	protected $_status = JSend::SUCCESS;
+	
+	/**
+	 * @var array   Array of key => callback render-time filters
+	 */
+	protected $_filters = array();
 	
 	/**
 	 * @param   array   initial array of data
@@ -244,6 +252,41 @@ class Kohana_JSend {
 		
 		return $this;
 	}
+
+	/**
+	 * Data filter getter / setter
+	 * 
+	 * @param   string  $key (returns the whole filters array if NULL)
+	 * @param   mixed   $filter (set to FALSE to remove)
+	 * @return  $this   (on set)
+	 * @return  mixed   filter value
+	 */
+	public function filter($key = NULL, $filter = NULL)
+	{
+		if (is_array($key))
+		{
+			$this->_filters = $key;
+			
+			return $this;
+		}
+		
+		if ($key === NULL)
+			return $this->_filters;
+			
+		if ($filter === NULL)
+			return Arr::get($this->_filters, $key);
+		
+		if ($filter === FALSE)
+		{
+			unset($this->_filters[$key]);
+		}
+		else
+		{
+			$this->_filters[$key] = $filter;
+		}
+		
+		return $this;
+	}
 	
 	/**
 	 * Data getter (Arr::path() enabled)
@@ -267,10 +310,10 @@ class Kohana_JSend {
 	 * @chainable
 	 * @param   mixed   $key string or array of key => value pairs
 	 * @param   mixed   $value to set (in case $key is int or string)
-	 * @param   mixed   $callback to use (when setting objects)
+	 * @param   mixed   $filter to use (when setting objects)
 	 * @return  JSend   $this
 	 */
-	public function set($key, $value = NULL, $callback = NULL)
+	public function set($key, $value = NULL, $filter = NULL)
 	{
 		/**
 		 * If array passed, replace the whole data
@@ -287,24 +330,8 @@ class Kohana_JSend {
 			return $this;
 		}
 		
-		/**
-		 * Use callback filter to render objects
-		 * - If no callback is specified, default_callback() will be used
-		 * - If 3rd parameter is set to FALSE, object will be set without callback
-		 */
-		if (is_object($value) and $callback !== FALSE)
-		{
-			if ($callback === NULL)
-			{
-				$callback = $this->default_callback();
-			}
-			
-			$this->_data[$key] = call_user_func($callback, $value);
-		}
-		else
-		{
-			$this->_data[$key] = $value;
-		}
+		$this->_data[$key] = $value;
+		$this->_filters[$key] = $filter;
 		
 		return $this;
 	}
@@ -342,16 +369,16 @@ class Kohana_JSend {
 	 * @chainable
 	 * @param   mixed   $key string or array of key => value pairs
 	 * @param   mixed   $value to set (in case $key is int or string)
-	 * @param   mixed   $callback to use for setting objects
+	 * @param   mixed   $filter to use for setting objects
 	 * @return  mixed   $this on set, complete data array if $key is NULL
 	 */
-	public function data($key = NULL, $value = NULL, $callback = NULL)
+	public function data($key = NULL, $value = NULL, $filter = NULL)
 	{
 		// If key is empty, use as getter
 		if ($key === NULL)
 			return $this->_data;
 			
-		return $this->set($key, $value, $callback);
+		return $this->set($key, $value, $filter);
 	}
 	
 	/**
@@ -430,9 +457,18 @@ class Kohana_JSend {
 	 */
 	public function render($encode_options = NULL)
 	{
-		$data = array(
+		$data = array();
+		
+		foreach ($this->_data as $key => $value)
+		{
+			$filter = Arr::get($this->_filters, $key);
+			
+			$data[$key] = $this->run_filter($value, $filter);
+		}
+		
+		$result = array(
 			'status' => $this->_status,
-			'data'   => $this->_data,
+			'data'   => $data,
 		);
 		
 		/**
@@ -441,22 +477,22 @@ class Kohana_JSend {
 		 */
 		if ($this->_status === JSend::ERROR)
 		{
-			$data['message'] = $this->_message;
+			$result['message'] = $this->_message;
 			
 			if ($this->_code !== NULL)
 			{
-				$data['code'] = $this->_code;
+				$result['code'] = $this->_code;
 			}
 			
-			if (empty($data['data']))
+			if (empty($result['data']))
 			{
-				unset($data['data']);
+				unset($result['data']);
 			}
 		}
 		
 		try
 		{
-			$response = JSend::encode($data, $encode_options);
+			$response = JSend::encode($result, $encode_options);
 		}
 		catch (JSend_Exception $e)
 		{
@@ -491,6 +527,39 @@ class Kohana_JSend {
 		$response->body($this->render($encode_options))
 			->headers('content-type','application/json')
 			->headers('x-response-format','jsend'); 
+	}
+	
+	/**
+	 * Runs the passed filter on a value
+	 * 
+	 * @param    mixed $value
+	 * @param    mixed $filter
+	 * @return   mixed
+	 */
+	public function run_filter($value, $filter)
+	{
+		/**
+		 * If filter is set to FALSE, object won't be filtered at all
+		 */
+		if ($filter !== FALSE)
+		{
+			if (is_object($value))
+			{
+				if ($filter === NULL)
+				{
+					$filter = $this->default_callback();
+				}
+				
+				$value = call_user_func($filter, $value);
+			}
+			elseif ($filter !== NULL)
+			{
+				// If a filter has been passed for other values..
+				$value = call_user_func($filter, $value);
+			}
+		}
+
+		return $value;
 	}
 	
 }
