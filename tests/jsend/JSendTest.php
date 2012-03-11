@@ -289,4 +289,56 @@ class JSend_JSendTest extends Unittest_TestCase
 		$this->assertTrue($jsend === $jsend->message('fubar'));
 		$this->assertTrue($jsend === $jsend->status(JSend::ERROR));
 	}
+	
+	public function provider_run_filter()
+	{
+		return array(
+			array(
+				' foobar ',
+				'trim',
+				'foobar',
+			),
+			array(
+				'foobar',
+				NULL,
+				'foobar',
+			),
+			array(
+				new ArrayObject(array('foo' => 'bar')),
+				NULL,
+				array('foo' => 'bar'),
+			),
+			array(
+				'foo',
+				FALSE,
+				'foo',
+			),
+			array(
+				$object = new stdClass,
+				FALSE,
+				$object,
+			),
+			array(
+				array('foo' => 'bar'),
+				'json_encode',
+				'{"foo":"bar"}',
+			),
+		);
+	}
+	
+	/**
+	 * @group jsend.run_filter
+	 * @test
+	 * @dataProvider provider_run_filter
+	 * @param mixed $value
+	 * @param mixed $filter
+	 * @param mixed $expected
+	 */
+	public function test_run_filter($value, $filter, $expected)
+	{
+		$jsend = new JSend;
+		$return = $jsend->run_filter($value, $filter);
+		
+		$this->assertSame($return, $expected);
+	}
 }

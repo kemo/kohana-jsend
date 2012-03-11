@@ -265,8 +265,15 @@ class Kohana_JSend {
 	{
 		if ($filter === NULL)
 			return Arr::get($this->_filters, $key);
-
-		$this->_filters[$key] = $filter;
+		
+		if ($filter === FALSE)
+		{
+			unset($this->_filters[$key]);
+		}
+		else
+		{
+			$this->_filters[$key] = $filter;
+		}
 		
 		return $this;
 	}
@@ -446,32 +453,7 @@ class Kohana_JSend {
 		{
 			$filter = Arr::get($this->_filters, $key);
 			
-			/**
-			 * If filter is set to FALSE, object won't be filtered at all
-			 */
-			if ($filter !== FALSE)
-			{
-				if (is_object($value))
-				{
-					if ($filter === NULL)
-					{
-						$filter = $this->default_callback();
-					}
-					
-					$data[$key] = call_user_func($filter, $value);
-				}
-				elseif ($filter !== NULL)
-				{
-					// If a filter has been passed for other values..
-					$data[$key] = call_user_func($filter, $value);
-				}
-			}
-			
-			// If no value has been set using filters..
-			if ( ! array_key_exists($key, $data))
-			{
-				$data[$key] = $value;
-			}
+			$data[$key] = $this->run_filter($value, $filter);
 		}
 		
 		$result = array(
@@ -535,6 +517,39 @@ class Kohana_JSend {
 		$response->body($this->render($encode_options))
 			->headers('content-type','application/json')
 			->headers('x-response-format','jsend'); 
+	}
+	
+	/**
+	 * Runs the passed filter on a value
+	 * 
+	 * @param    mixed $value
+	 * @param    mixed $filter
+	 * @return   mixed
+	 */
+	public function run_filter($value, $filter)
+	{
+		/**
+		 * If filter is set to FALSE, object won't be filtered at all
+		 */
+		if ($filter !== FALSE)
+		{
+			if (is_object($value))
+			{
+				if ($filter === NULL)
+				{
+					$filter = $this->default_callback();
+				}
+				
+				$value = call_user_func($filter, $value);
+			}
+			elseif ($filter !== NULL)
+			{
+				// If a filter has been passed for other values..
+				$value = call_user_func($filter, $value);
+			}
+		}
+
+		return $value;
 	}
 	
 }
