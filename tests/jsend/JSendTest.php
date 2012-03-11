@@ -126,6 +126,29 @@ class JSend_JSendTest extends Unittest_TestCase
 		$this->assertSame($second_filter, $jsend->filter($key));
 	}
 	
+	public function provider_filter_return()
+	{
+		return array(
+			array(NULL, NULL, array()),
+			array('foo',NULL,NULL),
+		);
+	}
+	
+	/**
+	 * @group jsend.filter
+	 * @dataProvider provider_filter_return
+	 * @test
+	 * @param mixed $key 
+	 * @param mixed $value
+	 * @param mixed $expected
+	 */
+	public function test_filter_return($key, $value, $expected)
+	{
+		$jsend = new JSend;
+		
+		$this->assertSame($jsend->filter($key, $value), $expected);
+	}
+	
 	/**
 	 * @group jsend.get
 	 * @test
@@ -281,6 +304,7 @@ class JSend_JSendTest extends Unittest_TestCase
 		$jsend = new JSend;
 		
 		$this->assertTrue($jsend === $jsend->bind('foo', $bar));
+		$this->assertTrue($jsend === $jsend->filter(array()));
 		$this->assertTrue($jsend === $jsend->filter('foo', 'Foo::bar'));
 		$this->assertTrue($jsend === $jsend->data('foo','bar'));
 		$this->assertTrue($jsend === $jsend->set('foo','bar'));

@@ -256,13 +256,23 @@ class Kohana_JSend {
 	/**
 	 * Data filter getter / setter
 	 * 
-	 * @param   string  $key
+	 * @param   string  $key (returns the whole filters array if NULL)
 	 * @param   mixed   $filter (set to FALSE to remove)
 	 * @return  $this   (on set)
 	 * @return  mixed   filter value
 	 */
-	public function filter($key, $filter = NULL)
+	public function filter($key = NULL, $filter = NULL)
 	{
+		if (is_array($key))
+		{
+			$this->_filters = $key;
+			
+			return $this;
+		}
+		
+		if ($key === NULL)
+			return $this->_filters;
+			
 		if ($filter === NULL)
 			return Arr::get($this->_filters, $key);
 		
