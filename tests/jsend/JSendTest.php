@@ -241,4 +241,15 @@ class JSend_JSendTest extends Unittest_TestCase
 		$this->assertTrue($response->headers('x-response-format') === 'jsend');
 	}
 	
+	public function test_chaining()
+	{
+		$jsend = new JSend;
+		
+		$this->assertTrue($jsend === $jsend->bind('foo', $bar));
+		$this->assertTrue($jsend === $jsend->set('foo','bar'));
+		$this->assertTrue($jsend === $jsend->set(array('foo' => 'bar')));
+		$this->assertTrue($jsend === $jsend->code(500));
+		$this->assertTrue($jsend === $jsend->message('fubar'));
+		$this->assertTrue($jsend === $jsend->status(JSend::ERROR));
+	}
 }
