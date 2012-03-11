@@ -31,9 +31,11 @@ class JSend_JSendTest extends Unittest_TestCase
 	 */
 	public function test_construct(array $data)
 	{
+		// Assert that the normal constructor sets data
 		$jsend = new JSend($data);
 		$this->assertSame($jsend->data(), $data);
 		
+		// Assert that the factory passes data to the constructor
 		$jsend2 = JSend::factory($data);
 		$this->assertSame($jsend2->data(), $data);
 	}
@@ -68,8 +70,8 @@ class JSend_JSendTest extends Unittest_TestCase
 	public function test_set($key, $value = NULL, $filter = NULL, $expected_data = NULL)
 	{
 		$jsend = new JSend;
+		
 		$jsend->set($key, $value, $filter);
-
 		$this->assertSame($jsend->data(), $expected_data);
 	}
 	
@@ -93,6 +95,35 @@ class JSend_JSendTest extends Unittest_TestCase
 				'fubar',
 			),
 		);
+	}
+
+	public function provider_filter()
+	{
+		return array(
+			array('foo','Foo::bar','Bar::foo'),
+			array('bar',FALSE,'trim'),
+		);
+	}
+	
+	/**
+	 * @group jsend.filter
+	 * @test
+	 * @dataProvider provider_filter
+	 * @param string $key
+	 * @param mixed $initial_filter
+	 * @param mixed $second_filter
+	 */
+	public function test_filter($key, $initial_filter, $second_filter)
+	{
+		$jsend = new JSend;
+		
+		// Assert that setting filters on set() works
+		$jsend->set($key, 'bar', $initial_filter);
+		$this->assertSame($initial_filter, $jsend->filter($key));
+		
+		// Assert that changing filters with filter() works
+		$jsend->filter($key, $second_filter);
+		$this->assertSame($second_filter, $jsend->filter($key));
 	}
 	
 	/**
@@ -241,11 +272,17 @@ class JSend_JSendTest extends Unittest_TestCase
 		$this->assertTrue($response->headers('x-response-format') === 'jsend');
 	}
 	
+	/**
+	 * @test
+	 * @group jsend.chaining
+	 */
 	public function test_chaining()
 	{
 		$jsend = new JSend;
 		
 		$this->assertTrue($jsend === $jsend->bind('foo', $bar));
+		$this->assertTrue($jsend === $jsend->filter('foo', 'Foo::bar'));
+		$this->assertTrue($jsend === $jsend->data('foo','bar'));
 		$this->assertTrue($jsend === $jsend->set('foo','bar'));
 		$this->assertTrue($jsend === $jsend->set(array('foo' => 'bar')));
 		$this->assertTrue($jsend === $jsend->code(500));

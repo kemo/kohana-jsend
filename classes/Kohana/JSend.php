@@ -184,7 +184,7 @@ class Kohana_JSend {
 	protected $_status = JSend::SUCCESS;
 	
 	/**
-	 * @var array   Filters for rendering objects
+	 * @var array   Array of key => callback render-time filters
 	 */
 	protected $_filters = array();
 	
@@ -249,6 +249,24 @@ class Kohana_JSend {
 	public function bind($key, & $value)
 	{
 		$this->_data[$key] =& $value;
+		
+		return $this;
+	}
+
+	/**
+	 * Data filter getter / setter
+	 * 
+	 * @param   string  $key
+	 * @param   mixed   $filter (set to FALSE to remove)
+	 * @return  $this   (on set)
+	 * @return  mixed   filter value
+	 */
+	public function filter($key, $filter = NULL)
+	{
+		if ($filter === NULL)
+			return Arr::get($this->_filters, $key);
+
+		$this->_filters[$key] = $filter;
 		
 		return $this;
 	}
