@@ -263,16 +263,22 @@ class Kohana_JSend {
 	 */
 	public function filter($key = NULL, $filter = NULL)
 	{
+		if ($key === NULL)
+			return $this->_filters;
+			
 		if (is_array($key))
 		{
-			$this->_filters = $key;
+			// Clean the current filters array
+			$this->_filters = array();
+			
+			foreach ($key as $_key => $_filter)
+			{
+				$this->filter($_key, $_filter);
+			}
 			
 			return $this;
 		}
 		
-		if ($key === NULL)
-			return $this->_filters;
-			
 		if ($filter === NULL)
 			return Arr::get($this->_filters, $key);
 		
@@ -330,7 +336,7 @@ class Kohana_JSend {
 			return $this;
 		}
 		
-		$this->_data[$key] = $value;
+		$this->_data[$key]    = $value;
 		$this->_filters[$key] = $filter;
 		
 		return $this;
@@ -405,6 +411,7 @@ class Kohana_JSend {
 				$this->code($code);
 			}
 			
+			// Use the exception message in response
 			$this->_message = __(':class: :message', array(
 				':class' 	=> get_class($message),
 				':message' 	=> $message->getMessage(),
@@ -461,8 +468,7 @@ class Kohana_JSend {
 		
 		foreach ($this->_data as $key => $value)
 		{
-			$filter = Arr::get($this->_filters, $key);
-			
+			$filter     = Arr::get($this->_filters, $key);
 			$data[$key] = $this->run_filter($value, $filter);
 		}
 		
@@ -538,9 +544,7 @@ class Kohana_JSend {
 	 */
 	public function run_filter($value, $filter)
 	{
-		/**
-		 * If filter is set to FALSE, object won't be filtered at all
-		 */
+		// If filter is set to FALSE, object won't be filtered at all
 		if ($filter === FALSE)
 			return $value;
 		
