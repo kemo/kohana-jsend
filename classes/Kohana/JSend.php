@@ -541,22 +541,18 @@ class Kohana_JSend {
 		/**
 		 * If filter is set to FALSE, object won't be filtered at all
 		 */
-		if ($filter !== FALSE)
+		if ($filter === FALSE)
+			return $value;
+		
+		if (is_object($value))
 		{
-			if (is_object($value))
-			{
-				if ($filter === NULL)
-				{
-					$filter = $this->default_callback();
-				}
-				
-				$value = call_user_func($filter, $value);
-			}
-			elseif ($filter !== NULL)
-			{
-				// If a filter has been passed for other values..
-				$value = call_user_func($filter, $value);
-			}
+			$filter = $filter ?: $this->default_callback();
+			$value  = call_user_func($filter, $value);
+		}
+		elseif ($filter !== NULL)
+		{
+			// If a filter exists for other values other than objects..
+			$value = call_user_func($filter, $value);
 		}
 
 		return $value;
