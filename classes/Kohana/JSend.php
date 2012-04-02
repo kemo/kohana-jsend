@@ -72,7 +72,9 @@ class Kohana_JSend {
 			$options = JSend::DEFAULT_OPTIONS;
 		}
 		
-		$result = json_decode($json, $assoc, $depth, $options);
+		$result = version_compare(PHP_VERSION, '5.4') < 0
+			? json_decode($json, $assoc, $depth, $options)
+			: json_decode($json, $assoc, $depth);
 		
 		return JSend::check_json_errors($result);
 	}
