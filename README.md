@@ -47,3 +47,20 @@ See: http://labs.omniti.com/labs/jsend
 			->render_into($this->response);
 	}
 	
+### Example jQuery response handling
+
+	$.post('/posts', {from: 1337}, function(jsend) {
+		if (jsend.status === 'success') {
+			$.each(jsend.data.posts, function(key, post) {
+				$('#posts').append('<a href="' + post.url + '">' + post.title + '</a>')
+			})
+		}
+		else if (jsend.status === 'fail') {
+			$.each(jsend.data.errors, function(field, error) {
+				$('#form').find('#' + field).append('<span class="error">' + error + '</span>')
+			})
+		}
+		else {
+			$('#posts').addClass('error').text('Internal error: ' + post.message)
+		}
+	});

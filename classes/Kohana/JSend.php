@@ -8,7 +8,7 @@
 class Kohana_JSend {
 
 	const DEFAULT_ASSOC = FALSE;    // Default $assoc is FALSE
-	const DEFAULT_DEPTH = 512;      // Default $depth is 512
+	const DEFAULT_DEPTH = 512;      // Default $depth is 512	
 	const DEFAULT_OPTIONS = 0;      // Default $options is 0
 
 	const ERROR     = 'error';      // Execution errors; exceptions, etc.
@@ -51,11 +51,10 @@ class Kohana_JSend {
 	 * @param   string  $json       The JSON string being decoded.
 	 * @param   bool    $assoc      Convert the result into associative array?
 	 * @param   int     $depth      User specified recursion depth.
-	 * @param   int     $options    Bitmask of JSON decode options.
 	 * @return  mixed   Decoded value
 	 * @throws  JSend_Exception
 	 */
-	public static function decode($json, $assoc = NULL, $depth = NULL, $options = NULL)
+	public static function decode($json, $assoc = NULL, $depth = NULL)
 	{
 		if ($assoc === NULL)
 		{
@@ -67,12 +66,7 @@ class Kohana_JSend {
 			$depth = JSend::DEFAULT_DEPTH;
 		}
 		
-		if ($options === NULL)
-		{
-			$options = JSend::DEFAULT_OPTIONS;
-		}
-		
-		$result = json_decode($json, $assoc, $depth, $options);
+		$result = json_decode($json, $assoc, $depth);
 		
 		return JSend::check_json_errors($result);
 	}
