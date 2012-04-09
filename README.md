@@ -64,3 +64,5 @@ See: http://labs.omniti.com/labs/jsend
 			$('#posts').addClass('error').text('Internal error: ' + post.message)
 		}
 	});
+	
+This can also be overriden on more 'global' level, by overriding or adding jQuery methods.
