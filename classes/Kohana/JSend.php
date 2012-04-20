@@ -51,10 +51,11 @@ class Kohana_JSend {
 	 * @param   string  $json       The JSON string being decoded.
 	 * @param   bool    $assoc      Convert the result into associative array?
 	 * @param   int     $depth      User specified recursion depth.
+	 * @param   int     $options    Bitmask
 	 * @return  mixed   Decoded value
 	 * @throws  JSend_Exception
 	 */
-	public static function decode($json, $assoc = NULL, $depth = NULL)
+	public static function decode($json, $assoc = NULL, $depth = NULL, $options = NULL)
 	{
 		if ($assoc === NULL)
 		{
