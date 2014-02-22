@@ -1,11 +1,10 @@
 <?php defined('SYSPATH') OR die('Kohana bootstrap needs to be included before tests run');
-
 /**
  * Tests the JSend model functionality
  *
- * @group jsend
- *
- * @category   Tests
+ * @group    jsend
+ * @category Tests
+ * @author   Kemal Delalic <kemal.delalic@gmail.com>
  */
 class JSend_JSendTest extends Unittest_TestCase
 {

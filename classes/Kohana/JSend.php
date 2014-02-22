@@ -2,7 +2,7 @@
 /**
  * Strict JSend (JSON) response format
  *
- * @author	Kemal Delalic <github.com/kemo>
+ * @author	Kemal Delalic <kemal.delalic@gmail.com>
  * @see		http://labs.omniti.com/labs/jsend
  */ 
 class Kohana_JSend {
