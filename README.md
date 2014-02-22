@@ -1,29 +1,34 @@
-# Kohana JSend module
+# Kohana JSend module (easy JSON API)
 ### Author: Kemal Delalic
 
 See: http://labs.omniti.com/labs/jsend
 	
-### Example multiple scenario action
+### Example API controller
+	
+	public function before()
+	{
+		parent::before();
+
+		$this->json = new JSend;
+	}
 	
 	public function action_create()
 	{
-		$json = new JSend;
-		$post = new Model_Post;
-		
 		if ($this->request->method() === Request::POST)
-		{
+		{	
 			try
 			{
-				$post->values($this->request->post())
+				$post = ORM::factory('post')
+					->values($this->request->post(), array('title','message'))
 					->create();
 					
-				$json->data('post', $post); // success is default anyways
+				$this->json->data('post', $post); // success is default anyways
 			}
 			catch (ORM_Validation_Exception $e)
 			{
 				// Errors are extracted
 				// from ORM_Validation_Exception objects
-				$json->status(JSend::FAIL)
+				$this->json->status(JSend::FAIL)
 					->data('errors', $e); 
 			}
 			catch (Exception $e)
@@ -31,22 +36,37 @@ See: http://labs.omniti.com/labs/jsend
 				// Exception message will be extracted
 				// and status will be set to JSend::ERROR
 				// because only error responses support messages
-				$json->message($e); 
+				$this->json->message($e); 
 			}
 		}
-		
-		$json->render_into($this->response);
+		else
+		{
+			$this->json->message('Not a POST request?');
+		}
 	}
 
-### Example data retrieval action
-
-	public function action_posts()
+	public function action_all()
 	{
-		// Success is the default JSend status
-		JSend::factory(array('posts' => ORM::factory('post')->find_all()))
-			->render_into($this->response);
+		$this->json->set('posts', ORM::factory('post')->find_all());
 	}
-	
+
+	public function action_read()
+	{
+		$post = ORM::factory('post', $id = $this->router->param('id'));
+
+		if ( ! $post->loaded())
+			return $this->json->message('Post :id not found!', array('id' => $id));
+
+		$this->json->data('post', $post);
+	}
+
+	public function after()
+	{
+		$this->json->render_into($this->response);
+
+		return parent::after();
+	}
+
 ### Example jQuery response handling
 
 	$.post('/posts', {from: 1337}, function(jsend) {
