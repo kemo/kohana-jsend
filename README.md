@@ -1,7 +1,7 @@
 # Kohana JSend module (easy JSON API)
 ### Author: Kemal Delalic
 
-See: http://labs.omniti.com/labs/jsend
+See: [http://labs.omniti.com/labs/jsend](https://github.com/omniti-labs/jsend)
 	
 ### Example API controller
 	
